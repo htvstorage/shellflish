@@ -1,4 +1,4 @@
-workflow:
+workflows:
   shellfish-ios-workflow:
     name: ShellFish Clone iOS Build
     max_build_duration: 60
@@ -6,43 +6,21 @@ workflow:
     environment:
       xcode: latest
       cocoapods: default
-    cache:
-      cache_paths:
-        - ~/.cocoapods
     triggering:
       events:
         - push
-      branch_patterns:
-        - pattern: main
-          include: true
     scripts:
-      - name: Set up project
+      - name: Set up
         script: |
-          # Nếu bạn chưa có .xcodeproj, tạo bằng xcodegen hoặc dùng project có sẵn
-          # Ở đây giả sử bạn đã push cả .xcodeproj lên GitHub
-          echo "Project ready"
-      - name: Install dependencies
+          echo "Building ShellFishClone"
+      - name: Build without signing for test
         script: |
-          # Swift Package Manager tự resolve
-          xcodebuild -resolvePackageDependencies -project ShellFishClone.xcodeproj -scheme ShellFishClone
-      - name: Build IPA (Ad Hoc)
-        script: |
-          xcodebuild archive \
-            -project ShellFishClone.xcodeproj \
+          xcodebuild -project ShellFishClone.xcodeproj \
             -scheme ShellFishClone \
             -configuration Release \
-            -archivePath build/ShellFishClone.xcarchive \
-            CODE_SIGNING_ALLOWED=NO
-          
-          # Export Ad Hoc (cần provisioning)
-          xcodebuild -exportArchive \
-            -archivePath build/ShellFishClone.xcarchive \
-            -exportPath build/ipa \
-            -exportOptionsPlist ExportOptions.plist || echo "Export cần signing - xem log"
+            -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO \
+            build
     artifacts:
       - build/ipa/*.ipa
-      - build/*.xcarchive
-    publishing:
-      email:
-        recipients:
-          - your_email@example.com
+      - build/*.app
